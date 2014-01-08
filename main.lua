@@ -1,20 +1,21 @@
 require "field"
 --debugging matrix
+require "debugmode"
 debug_on = true
-debugmode_noinit = true
-if debug_on then require "debugmode" debugmode_init = false end
 
 --variable to decide which screen to show.
 screen = nil
 
 function love.load()
 	screen = "main menu"
+	love.window.setMode(960,540)
+	field.load()
 end
 
 function love.draw() 
 	if debug_on then debugmode.draw()  end
 	if screen == "game" then field.draw() end
-	if screen == "main menu" then love.graphics.print("Hit spacebar to start." .. " Move with arrow keys and spacebar", 200, 300) end
+	if screen == "main menu" then love.graphics.print("Hit space to start." .. " Move with arrow keys and space", 200, 300) end
 end
 
 function love.update(dt)
@@ -23,19 +24,9 @@ end
 
 function love.keypressed(key)
 	if debug_on then debugmode.keypressed(key) end
-	if (key == "f1") and (not debug_on) then
-		debug_on = true
-		if debugmode_noinit then
-			require "debugmode"
-			debugmode_init = false
-		end
-	elseif key == "f1" and debug_on then debug_on=false
-	end
+	if key == "f1" then debug_on = (not debug_on) end
 	
-	if key == " " and screen == "main menu" then
-		screen = "game"
-		field.load()
-	end
+	if key == " " and screen == "main menu" then screen = "game" end
 	if screen == "game" then field.keypressed(key) end
 end
 
