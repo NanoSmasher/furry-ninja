@@ -6,9 +6,10 @@ fullsupport = false
 function debugmode.draw() 
 	love.graphics.setColor(255, 255, 255) 
 	love.graphics.print("Debug mode",0,0)
-	if fullsupport then love.graphics.print("All graphics allowed",0,20) end
-	love.graphics.print("Player world coordinates: "..player.y..", "..player.x,0,40)
-	love.graphics.print("Velocity "..player.y_velocity,0,60)
+	love.graphics.print("Player world coordinates: "..player.y..", "..player.x,0,20)
+	love.graphics.print("Velocity "..player.y_velocity,0,40)
+	if fullsupport then love.graphics.print("All graphics allowed",0,60) end
+	if player.can_float then love.graphics.print("Player can use jetpack.",0,80) end
 end
 
 function debugmode.keypressed(key)
