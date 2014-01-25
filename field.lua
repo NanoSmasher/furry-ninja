@@ -2,6 +2,8 @@ if (field) then return end -- make sure it doesn't call itself
 
 field = {}
 
+check = false
+
 function field.load()
 	gravity = -2000
 	launch = 600
@@ -10,54 +12,51 @@ function field.load()
 	
 	player = {
 		image = love.graphics.newImage("hamster.png"),
-		
-		x = 500,
-		y = 100,
-		x_gspeed = 800,
-		x_aspeed = 800,
-		y_velocity = 0,
-		ground = "none",
-		
-		float = 0.5,
-		float_max = 0.5,
-		can_float = true
-		}
-		
-	rect = {
-		{
-		name = "floor",
-		xini = 0,
-		yini = winH-20,
-		width = winW,
-		height = 10
-		},
-		{
-		name = "block",
-		xini = 0,
-		yini = winH*3/4,
-		width = winW/4,
-		height = 100
-		}
+
+		iw = 82, ih = 82,
+		x = 500, y = 100,
+		x_gspeed = 800, x_aspeed = 800,
+		y_velocity = 0, ground = "none",
+		float = 0.5, float_max = 0.5, can_float = true
 	}
+	
+	
+	rect = {
+		{name = "floor",	xini = 0,			yini = winH-20,		width = winW,	height = 10},
+		{name = "blockA",	xini = winW*8/9,	yini = winH*3/4,	width = winW/9,	height = 50},
+		{name = "blockB",	xini = 0,			yini = winH*1/2,	width = winW/4,	height = 100}		
+	}
+	
+	canvas = love.graphics.newCanvas(winW, winH)
+	love.graphics.setCanvas(canvas)
+        canvas:clear()
+		love.graphics.setColor(0, 0, 255)
+		for i = 1, #rect do
+			love.graphics.rectangle("fill",rect[i].xini,rect[i].yini,rect[i].width,rect[i].height)
+		end
+	love.graphics.setCanvas()
+	
 end
 
 function field.draw() 
 
-	if yep then love.graphics.print("Boop",700,200) end
-
-	love.graphics.setColor(0, 0, 255)
-	for i = 1, #rect do
-		love.graphics.rectangle("fill",rect[i].xini,rect[i].yini,rect[i].width,rect[i].height)
-	end
-	
 	love.graphics.setColor(255, 255, 255) --reset colour
-	love.graphics.draw(player.image, player.x-player.image:getWidth()/2, player.y-player.image:getHeight()/2, 0, 1, 1, player.image:getWidth()/2, player.image:getHeight()/2)
-	love.graphics.rectangle("fill",player.x-1, player.y-1, 3,3)
-	love.graphics.rectangle("fill", rect[2].xini + rect[2].width,rect[2].yini,1,1)
+	love.graphics.draw(canvas, 0, 0)
+	
+	love.graphics.draw(player.image, player.x-player.iw/2, player.y-player.ih/2, 0, 1, 1, 0, player.ih/2)
+	
+	love.graphics.setColor(255, 0, 0)
+	love.graphics.rectangle("fill",player.x+player.iw/2, player.y-player.ih, 3, 3) 
+	
+	if check then love.graphics.print("Yep", 500,500) end
 end
 
 function field.update(dt)
 
+	--check invisible bounds
+	if player.x < player.iw/2 then player.x = player.iw/2 end
+	if player.x > winW-player.iw/2 then player.x = winW-player.iw/2 end
+	
 	--jumping mechanics
 	if player.y_velocity ~= 0 then
 	
@@ -74,30 +73,63 @@ function field.update(dt)
 		player.y_velocity = terminal_velocity
 	end
 	
-	if player.y >= rect[2].yini and player.y <= rect[2].yini + 20 and player.y_velocity < 0 and player.x < rect[2].xini + rect[2].width then
-		player.y_velocity = 0
-		player.y = rect[2].yini
-		player.float = player.float_max
-		player.can_float = true
-		player.ground = rect[2].name
+	for i = 1, #rect do
+		--collision from the top
+		if player.y >= rect[i].yini and player.y <= rect[i].yini + 20
+		   and player.x > rect[i].xini and player.x < rect[i].xini + rect[i].width 
+		   and player.y_velocity < 0 then
+			player.y_velocity = 0
+			player.y = rect[i].yini
+			player.float = player.float_max
+			player.can_float = true
+			player.ground = rect[i].name
+		end
+	
+		--start falling if player moves off platform
+		if (player.x < rect[i].xini or player.x > rect[i].xini + rect[i].width)
+		   and player.ground == rect[i].name then
+			player.ground = ""
+			player.y_velocity = -0.0000001
+			player.can_float = false
+		end
+		
+		--collision from the left
+		if (player.x+player.iw/2 > rect[i].xini and player.x+player.iw/2 < rect[i].xini + 20)
+		   and (
+		    (player.y > rect[i].yini and player.y < rect[i].yini+rect[i].height)
+			 or
+			(player.y-player.ih > rect[i].yini and player.y-player.ih < rect[i].yini+rect[i].height)
+		   ) then
+					player.x = rect[i].xini - player.iw/2
+		end
+		
+		--collision from the right
+		if (player.x-player.iw/2 < rect[i].xini+rect[i].width
+			and player.x-player.iw/2 > rect[i].xini+rect[i].width-20
+		   )
+		   and (
+		    (player.y > rect[i].yini and player.y < rect[i].yini+rect[i].height)
+			 or
+			(player.y-player.ih > rect[i].yini and player.y-player.ih < rect[i].yini+rect[i].height)
+		   ) then
+					player.x = rect[i].xini + rect[i].width + player.iw/2
+		end
+		
+		
+		--(player.x+player.iw/2 > rect[i].xini and player.x+player.iw/2 < rect[i].xini + 20)
+		--(player.y >= rect[i].yini and player.y <= rect[i].yini+rect[i].height)
+		--(player.y-player.ih >= rect[i].yini and player.y-player.ih <= rect[i].yini+rect[i].height)
+		
+--		(player.y >= rect[i].yini and player.y <= rect[i].yini+rect[i].height)
+	--		or
+		--	(player.y-player.ih >= rect[i].yini and player.y-player.ih <= rect[i].yini+rect[i].height)
+		
+		--and
+		--((player.y >= rect[i].yini and player.y <= rect[i].yini+rect[1].height)
+		--or (player.y+player.ih >= rect[i].yini and player.y+player.ih <= rect[i].yini+rect[1].height)) then
+		--player.x = rect[i].xini - player.iw
 	end
 	
-	if player.x > rect[2].xini + rect[2].width and player.ground == rect[2].name then
-		player.ground = ""
-		player.y_velocity = -0.0000001
-	end
-	
-	if player.y >= rect[1].yini and player.y_velocity < 0 then
-		player.y_velocity = 0
-		player.y = rect[1].yini
-		player.float = player.float_max
-		player.can_float = true
-		player.ground = rect[1].name
-	end
-	
-	--scrolling mechanics
-	if player.x < player.image:getWidth()/2 then player.x = player.image:getWidth()/2 end
-	if player.x > winW-player.image:getWidth()/2 then player.x = winW-player.image:getWidth()/2 end
 	if love.keyboard.isDown("left") and player.y_velocity == 0 then player.x = player.x - player.x_gspeed*dt end
 	if love.keyboard.isDown("left") and player.y_velocity ~= 0 then player.x = player.x - player.x_aspeed*dt end
 	if love.keyboard.isDown("right") and player.y_velocity == 0 then player.x = player.x + player.x_gspeed*dt end
