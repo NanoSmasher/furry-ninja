@@ -15,7 +15,7 @@ end
 function love.draw() 
 	if debug_on then debugmode.draw()  end
 	if screen == "game" then field.draw() end
-	if screen == "main menu" then love.graphics.print("Hit space to start." .. " Move with arrow keys and space", 200, 300) end
+	if screen == "main menu" then love.graphics.print("Hit space to start." .. "Move with arrow keys, z, and x", 200, 300) end
 end
 
 function love.update(dt)
