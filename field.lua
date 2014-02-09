@@ -44,7 +44,7 @@ function field.draw()
 	love.graphics.draw(player.image, player.x-player.iw/2, player.y-player.ih/2, 0, 1, 1, 0, player.ih/2)
 	
 	love.graphics.setColor(255, 0, 0)
-	love.graphics.rectangle("fill",player.x+player.iw/2, player.y-player.ih, 3, 3) 
+	--love.graphics.rectangle("fill",player.x+player.iw/2, player.y-player.ih, 3, 3) 
 end
 
 function field.update(dt)
