@@ -10,10 +10,14 @@ function debugmode.draw()
 	love.graphics.print("Velocity "..player.y_velocity,0,40)
 	if fullsupport then love.graphics.print("All graphics allowed",0,60) end
 	if player.can_float then love.graphics.print("Player can use jetpack.",0,80) end
+
+	--invisible bounds
+	love.graphics.setColor(0, 255, 0)
+	love.graphics.rectangle("line", borderleft+player.iw/2-player.x+player.xoff, bordertop+player.ih/2-player.y+player.yoff, borderright-borderleft, borderbottom-bordertop)
 end
 
 function debugmode.keypressed(key)
-	if key == "c" then debugmode.checksupport() end
+	if key == "f2" then debugmode.checksupport() end
 end
 
 function debugmode.checksupport()

@@ -9,6 +9,7 @@ screen = nil
 function love.load()
 	screen = "main menu"
 	love.window.setMode(960,540)
+	love.window.setTitle("Furry Ninja")
 	field.load()
 end
 
@@ -16,10 +17,12 @@ function love.draw()
 	if debug_on then debugmode.draw()  end
 	if screen == "game" then field.draw() end
 	if screen == "main menu" then
+		love.graphics.setColor(255, 255, 255) 
 		love.graphics.print("Hit space to start.", 400, 220)
 		love.graphics.print("Move with arrow keys", 400, 240)
-		love.graphics.print("z to jump", 400, 260)
+		love.graphics.print("c to jump", 400, 260)
 		love.graphics.print("x to limit jump height/fast fall", 400, 280)
+		love.graphics.print("z for instant fast fall", 400, 300)
 		end
 end
 
