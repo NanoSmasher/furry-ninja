@@ -3,13 +3,17 @@ if (debugmode) then return end -- make sure it doesn't call itself
 debugmode = {}
 fullsupport = false
 
+misc_flag = 0
+
 function debugmode.draw() 
 	love.graphics.setColor(255, 255, 255) 
-	love.graphics.print("Debug mode",0,0)
+	love.graphics.print("Debug mode. dt="..delt,0,0)
 	love.graphics.print("Player world coordinates: "..player.y..", "..player.x,0,20)
-	love.graphics.print("Velocity "..player.y_velocity,0,40)
+	love.graphics.print("Velocity "..player.y_velocity..":: "..player.x_velocity,0,40)
 	if fullsupport then love.graphics.print("All graphics allowed",0,60) end
 	if player.can_float then love.graphics.print("Player can use jetpack.",0,80) end
+
+	if (misc_flag==1) then love.graphics.print("Flag trigger",100,0) end
 
 	--invisible bounds
 	love.graphics.setColor(0, 255, 0)

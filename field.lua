@@ -5,7 +5,9 @@ field = {}
 function field.load()
 	gravity = -2000
 	launch = 600
-	terminal_velocity = -1000
+	terminal_velocity = -2000
+	terminal_side = 25
+	friction = 100
 	winW, winH = love.graphics.getWidth(), love.graphics.getHeight()
 	
 	-- invisible bounds
@@ -20,8 +22,9 @@ function field.load()
 		iw = 82, ih = 82,							-- image dimensions	
 		x = 500, y = 100,							-- player coordinates
 		xoff = winW/2, yoff = winH/2, 				-- offset (for camera)
-		x_gspeed = 800, x_aspeed = 800,				-- speed
-		y_velocity = -0.0000001, ground = "none",	-- downward velocity, the name of the ground
+		x_gspeed = 100,	x_aspeed = 15,				-- horizontal acceleration
+		x_velocity = 0, y_velocity = -0.0000001, 	-- velocities
+		ground = "none",							-- the name of the ground
 		float = 0.5, float_max = 0.5,				-- jetpack mechanics
 		can_float = true, can_drop = false			-- boolean to test for conditions
 	}
@@ -29,7 +32,7 @@ function field.load()
 	
 	rect = {										--All the stationary platforms
 		{name = "floor",	xini = 0,			yini = winH-20,		width = winW,	height = 50},
-		{name = "blockA",	xini = winW*7/9,	yini = winH*3/4,	width = winW/9,	height = 50},
+		{name = "blockA",	xini = winW*7/9,	yini = winH*3/4,	width = winW/9,	height = 100},
 		{name = "blockB",	xini = winW*1/9,	yini = winH*1/2-50,	width = winW/4,	height = 200},
 		{name = "blockC",	xini = winW*14/36,	yini = winH*1/2-50,	width = 50,		height = 100}		
 	}
@@ -52,15 +55,44 @@ function field.draw()
 end
 
 function field.update(dt)
-	--horizontal movement
-	if love.keyboard.isDown("left") and player.y_velocity == 0 then player.x = player.x - player.x_gspeed*dt end
-	if love.keyboard.isDown("left") and player.y_velocity ~= 0 then player.x = player.x - player.x_aspeed*dt end
-	if love.keyboard.isDown("right") and player.y_velocity == 0 then player.x = player.x + player.x_gspeed*dt end
-	if love.keyboard.isDown("right") and player.y_velocity ~= 0 then player.x = player.x + player.x_aspeed*dt end
+
+	--horizontal ground movement
+	if player.y_velocity == 0 then
+		if love.keyboard.isDown("right") then 
+			player.x_velocity = player.x_velocity + player.x_gspeed*dt
+			if player.x_velocity > terminal_side then player.x_velocity = terminal_side end
+		elseif love.keyboard.isDown("left") then
+			player.x_velocity = player.x_velocity - player.x_gspeed*dt
+			if player.x_velocity < -terminal_side then player.x_velocity = -terminal_side end
+		else
+			if (player.x_velocity > 0) then
+				player.x_velocity = player.x_velocity - friction*dt
+				if (player.x_velocity < 0) then player.x_velocity = 0 end
+			elseif (player.x_velocity < 0) then
+				player.x_velocity = player.x_velocity + friction*dt
+				if (player.x_velocity > 0) then player.x_velocity = 0 end
+			end
+		end
+		player.x = player.x + player.x_velocity
+	end
+
+	--horizontal air movement
+	if player.y_velocity ~= 0 then
+		if love.keyboard.isDown("right") then
+			if (player.x_velocity + player.x_aspeed > terminal_side) then
+				player.x_velocity = terminal_side - player.x_aspeed end
+			player.x = player.x + player.x_velocity + player.x_aspeed
+		elseif love.keyboard.isDown("left") then
+			if (player.x_velocity - player.x_aspeed < -terminal_side) then
+				player.x_velocity = -terminal_side + player.x_aspeed end
+			player.x = player.x + player.x_velocity - player.x_aspeed
+		end
+	end
+
 	
 	--check invisible side bounds
-	if player.x < player.iw/2+borderleft then player.x = player.iw/2+borderleft end
-	if player.x > borderright-player.iw/2 then player.x = borderright-player.iw/2 end
+	if player.x < player.iw/2+borderleft then player.x = player.iw/2+borderleft    player.x_velocity = 0 end
+	if player.x > borderright-player.iw/2 then player.x = borderright-player.iw/2  player.x_velocity = 0 end
 	if player.y > borderbottom then screen = "main menu" field.load() end
 	if player.y-player.ih < bordertop then player.y = bordertop+player.ih player.y_velocity = -0.0000001 end
 
@@ -70,7 +102,7 @@ function field.update(dt)
 		--float mechanics
 		if player.can_float and player.float > 0 then
 			player.float = player.float - dt
-			player.y_velocity = player.y_velocity + launch * (1.5*dt/player.float_max) --increase the velocity by nothing to launch (twice the distance)
+			player.y_velocity = player.y_velocity + launch * (1.5*dt/player.float_max) --jetpack
 			if player.float <= 0 then player.can_float = false end
 		end
 	
@@ -84,11 +116,12 @@ function field.update(dt)
 	for i = 1, #rect do
 		c = CheckCollision(i)
 
-		if (c == [[left]]) then player.x = rect[i].xini - player.iw/2 end
-		if (c == [[right]]) then player.x = rect[i].xini + rect[i].width + player.iw/2 end
+		if (c == [[left]]) then player.x = rect[i].xini - player.iw/2                   player.x_velocity = 0 end
+		if (c == [[right]]) then player.x = rect[i].xini + rect[i].width + player.iw/2  player.x_velocity = 0 end
 	
 		if (c == [[top]]) then
 			player.y_velocity = 0
+			player.x_velocity = 0
 			player.y = rect[i].yini
 			player.float = player.float_max
 			player.can_float = true
@@ -99,6 +132,7 @@ function field.update(dt)
 			player.y = rect[i].yini+rect[i].height+player.ih
 			player.ground = ""
 			player.y_velocity = -0.0000001
+			player.x_velocity = player.x_velocity/4
 			player.can_float = false
 		end
 	
@@ -139,8 +173,9 @@ function field.keypressed(key)
 	if key == "z" then
 	
 		if player.y_velocity ~= 0 and player.can_drop == true then
-			player.y_velocity = player.y_velocity - 1000
+			player.y_velocity = -2000
 			player.can_drop = false
+			player.can_float = false
 		end
 		
 	end

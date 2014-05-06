@@ -7,6 +7,7 @@ debug_on = true
 screen = nil
 
 function love.load()
+	delt = 0
 	screen = "main menu"
 	love.window.setMode(960,540)
 	love.window.setTitle("Furry Ninja")
@@ -14,7 +15,6 @@ function love.load()
 end
 
 function love.draw() 
-	if debug_on then debugmode.draw()  end
 	if screen == "game" then field.draw() end
 	if screen == "main menu" then
 		love.graphics.setColor(255, 255, 255) 
@@ -24,9 +24,11 @@ function love.draw()
 		love.graphics.print("x to limit jump height/fast fall", 400, 280)
 		love.graphics.print("z for instant fast fall", 400, 300)
 		end
+	if debug_on then debugmode.draw()  end
 end
 
 function love.update(dt)
+	delt = dt
 	if screen == "game" then field.update(dt) end
 end
 
