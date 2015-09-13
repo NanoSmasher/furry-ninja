@@ -7,14 +7,14 @@ function field.load()
 	launch = 600
 	terminal_velocity = -2000
 	terminal_side = 25
-	friction = 100
+	friction = 55
 	winW, winH = love.graphics.getWidth(), love.graphics.getHeight()
 	
 	-- invisible bounds
 	bordertop = -100
 	borderbottom = 600
-	borderleft = -100
-	borderright = 1200
+	borderleft = -4000
+	borderright = 4000
 	
 	player = {
 		image = love.graphics.newImage("hamster.png"),
@@ -31,13 +31,14 @@ function field.load()
 	
 	
 	rect = {										--All the stationary platforms
-		{name = "floor",	xini = 0,			yini = winH-20,		width = winW,	height = 50},
+		{name = "floor",	xini = -3500,		yini = winH-20,		width = 7000,	height = 50},
 		{name = "blockA",	xini = winW*7/9,	yini = winH*3/4,	width = winW/9,	height = 100},
 		{name = "blockB",	xini = winW*1/9,	yini = winH*1/2-50,	width = winW/4,	height = 200},
 		{name = "blockC",	xini = winW*14/36,	yini = winH*1/2-50,	width = 50,		height = 100}		
 	}
 	
-	canvas = love.graphics.newCanvas(winW, winH)	--Draw all stationary platforms onto canvas
+	canvas = love.graphics.newCanvas(8000, 8000)
+	--Draw all stationary platforms onto canvas
 	love.graphics.setCanvas(canvas)
         canvas:clear()
 		love.graphics.setColor(0, 0, 255)
@@ -65,15 +66,13 @@ function field.update(dt)
 			player.x_velocity = player.x_velocity - player.x_gspeed*dt
 			if player.x_velocity < -terminal_side then player.x_velocity = -terminal_side end
 		else
-			if (player.x_velocity > 0) then
-				player.x_velocity = player.x_velocity - friction*dt
-				if (player.x_velocity < 0) then player.x_velocity = 0 end
-			elseif (player.x_velocity < 0) then
-				player.x_velocity = player.x_velocity + friction*dt
-				if (player.x_velocity > 0) then player.x_velocity = 0 end
+			if (player.x_velocity ~= 0) then
+				player.x_velocity = player.x_velocity*friction*dt
+				if (player.x_velocity < 0.1 and player.x_velocity > -0.1) then player.x_velocity = 0 end
 			end
 		end
 		player.x = player.x + player.x_velocity
+		
 	end
 
 	--horizontal air movement
@@ -89,7 +88,6 @@ function field.update(dt)
 		end
 	end
 
-	
 	--check invisible side bounds
 	if player.x < player.iw/2+borderleft then player.x = player.iw/2+borderleft    player.x_velocity = 0 end
 	if player.x > borderright-player.iw/2 then player.x = borderright-player.iw/2  player.x_velocity = 0 end
